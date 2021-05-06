@@ -3,22 +3,31 @@
  */
 package socket.server;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import socket.client.Client;
+import socket.server.io.RequestObject;
+import socket.server.manager.PrimeCalculationManager;
 
+
+import javax.annotation.CheckForNull;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AppTest {
-    InetAddress host;
+    private static InetAddress host;
     private static final int PORT = 9876;
+    private static List<Client> list=new ArrayList<>();
 
-    @BeforeEach
-    void initialize() throws IOException {
+    @BeforeAll
+    static void initialize() throws IOException {
         Runnable runnable = () -> {
             try {
                 new App().startServerAndAcceptRequest();
@@ -32,29 +41,128 @@ class AppTest {
     }
 
     @Test
-    void sendRequest() throws IOException, ClassNotFoundException, InterruptedException {
-        for (int i = 0; i < 5; i++) {
-            // opening new socket for every request here. we can also send multiple requests with one socket.
-            Socket socket = new Socket(host.getHostName(), PORT);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectOutputStream.writeObject("request # " + i);
-            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-            String message = (String) objectInputStream.readObject();
-            System.out.println("Message from server: " + message);
-            objectOutputStream.close();
-            objectInputStream.close();
-            socket.close();
-            Thread.sleep(100);
+    void sendRequest() throws Exception {
+        Client client = new Client("client1", "127.0.0.1", 9876);
+        RequestObject req = new RequestObject();
+        HashMap<String, String> hm = new HashMap<>();
+        hm.put("n", "3000");
+        req.setManagerName("PrimeCalculationManager");
+        req.setMethod("findPrimes");
+        req.setRequestId("client1-1");
+        req.setArgs(hm);
+        req.setMessage("request");
+        client.sendRequest(req);
+        list.add(client);
+    }
+
+    @Test
+    void sendMultiRequestSingleClient() throws Exception {
+       // System.out.println("*** Multi Request Single Client Test ***");
+        Client client = new Client("client1", "127.0.0.1", 9876);
+        list.add(client);
+        for(int i=1;i<=3;i++) {
+            RequestObject req = new RequestObject();
+            HashMap<String, String> hm = new HashMap<>();
+            hm.put("n", ""+i*100);
+            req.setManagerName("PrimeCalculationManager");
+            req.setMethod("findPrimes");
+            req.setRequestId("client1-"+i);
+            req.setArgs(hm);
+            req.setMessage("request");
+            client.sendRequest(req);
+        }
+    }
+    /*
+    /// to test this, uncomment that portion
+    @Test
+    void sendMultiRequestMultiClient() throws Exception {
+        //System.out.println("*** Multi Request multi Client Test ***");
+        List<Client> clientList=new ArrayList<>();
+        for (int c = 1; c <= 4; c++) {
+            Client client = new Client("client_multi" + c, "127.0.0.1", 9876);
+            clientList.add(client);
+        }
+
+        for (int i = 1; i <= 30; i++) {
+            Random r = new Random();
+            int randomClient = r.nextInt(Integer.MAX_VALUE) % clientList.size();
+            Client client = clientList.get(randomClient);
+
+            /// creating request object
+            RequestObject req = new RequestObject();
+            HashMap<String, String> hm = new HashMap<>();
+            hm.put("n", "" + r.nextInt(3000));
+
+            req.setManagerName("PrimeCalculationManager");
+            req.setMethod("findPrimes");
+            req.setRequestId(client.getClientId() + "-" + i);
+            req.setArgs(hm);
+            req.setMessage("request");
+            client.sendRequest(req);
+        }
+        list.addAll(clientList);
+    }*/
+
+    @Test
+    void sendRequestWithNonInteger() throws Exception {
+       // System.out.println("*** Non Integer Value Test ***");
+        Client client = new Client("client1", "127.0.0.1", 9876);
+        RequestObject req = new RequestObject();
+        HashMap<String, String> hm = new HashMap<>();
+        hm.put("n", "NonInteger");
+        req.setManagerName("PrimeCalculationManager");
+        req.setMethod("findPrimes");
+        req.setRequestId("client1-1");
+        req.setArgs(hm);
+        req.setMessage("request");
+        client.sendRequest(req);
+        list.add(client);
+    }
+
+    @Test
+    void testPrimeCount() throws Exception {
+       // System.out.println("*** Prime Functionality Test ***");
+        PrimeCalculationManager manager=new PrimeCalculationManager();
+        for(int t=0;t<10;t++) {
+            Random r=new Random();
+            int num=r.nextInt(7000);
+            int res1 = manager.findPrimes(num);
+            int res2 = primeNumbersBruteForce(num);
+            assertTrue(res1 == res2);
         }
     }
 
-    @AfterEach
-    void cleanup() throws IOException, InterruptedException {
-        Socket socket = new Socket(host.getHostName(), PORT);
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-        objectOutputStream.writeObject("EXIT");
-        Thread.sleep(100);
-        objectOutputStream.close();
-        socket.close();
+    @Test
+    void isPrime()
+    {
+       // System.out.println("*** Null & negative number edge case Test ***");
+        PrimeCalculationManager manager=new PrimeCalculationManager();
+        assertTrue(0==manager.findPrimes(null));
+        assertTrue(0==manager.findPrimes(-3000));
+    }
+
+    int primeNumbersBruteForce(int n) {
+        int cnt=0;
+        for (int i = 2; i <= n; i++) {
+            if (isPrimeBruteForce(i)) {
+                cnt++;
+            }
+        }
+        return cnt;
+    }
+    boolean isPrimeBruteForce(int number) {
+        for (int i = 2; i < number; i++) {
+            if (number % i == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+    @AfterAll
+    static void release()
+    {
+        for(Client c:list)
+            c.closeClient();
+
     }
 }
