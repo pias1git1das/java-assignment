@@ -5,10 +5,9 @@ package socket.server;
 
 import org.junit.jupiter.api.*;
 import socket.client.Client;
+import socket.client.RequestThread;
 import socket.server.io.RequestObject;
 import socket.server.manager.PrimeCalculationManager;
-
-
 import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,7 +39,7 @@ class AppTest {
         host = InetAddress.getLocalHost();
     }
 
-    @Test
+   /* @Test
     void sendRequest() throws Exception {
         Client client = new Client("client1", "127.0.0.1", 9876);
         RequestObject req = new RequestObject();
@@ -55,35 +54,20 @@ class AppTest {
         list.add(client);
     }
 
-    @Test
-    void sendMultiRequestSingleClient() throws Exception {
-       // System.out.println("*** Multi Request Single Client Test ***");
-        Client client = new Client("client1", "127.0.0.1", 9876);
-        list.add(client);
-        for(int i=1;i<=3;i++) {
-            RequestObject req = new RequestObject();
-            HashMap<String, String> hm = new HashMap<>();
-            hm.put("n", ""+i*100);
-            req.setManagerName("PrimeCalculationManager");
-            req.setMethod("findPrimes");
-            req.setRequestId("client1-"+i);
-            req.setArgs(hm);
-            req.setMessage("request");
-            client.sendRequest(req);
-        }
-    }
-    /*
+   */
+
     /// to test this, uncomment that portion
     @Test
     void sendMultiRequestMultiClient() throws Exception {
         //System.out.println("*** Multi Request multi Client Test ***");
-        List<Client> clientList=new ArrayList<>();
-        for (int c = 1; c <= 4; c++) {
-            Client client = new Client("client_multi" + c, "127.0.0.1", 9876);
+        List<Client> clientList = new ArrayList<>();
+        // creating a client pool
+        for (int c = 1; c <= 10; c++) {
+            Client client = new Client("client" + c, "127.0.0.1", 9876);
             clientList.add(client);
         }
-
-        for (int i = 1; i <= 30; i++) {
+        /// making 1000 request for 10 clients
+        for (int i = 1; i <= 3000; i++) {
             Random r = new Random();
             int randomClient = r.nextInt(Integer.MAX_VALUE) % clientList.size();
             Client client = clientList.get(randomClient);
@@ -98,10 +82,11 @@ class AppTest {
             req.setRequestId(client.getClientId() + "-" + i);
             req.setArgs(hm);
             req.setMessage("request");
-            client.sendRequest(req);
+            RequestThread thread=new RequestThread(client,req);
+            Thread t=new Thread(thread);
+            t.start();
         }
-        list.addAll(clientList);
-    }*/
+    }
 
     @Test
     void sendRequestWithNonInteger() throws Exception {
@@ -119,45 +104,15 @@ class AppTest {
         list.add(client);
     }
 
-    @Test
-    void testPrimeCount() throws Exception {
-       // System.out.println("*** Prime Functionality Test ***");
-        PrimeCalculationManager manager=new PrimeCalculationManager();
-        for(int t=0;t<10;t++) {
-            Random r=new Random();
-            int num=r.nextInt(7000);
-            int res1 = manager.findPrimes(num);
-            int res2 = primeNumbersBruteForce(num);
-            assertTrue(res1 == res2);
-        }
-    }
-
-    @Test
+   /* @Test
     void isPrime()
     {
        // System.out.println("*** Null & negative number edge case Test ***");
         PrimeCalculationManager manager=new PrimeCalculationManager();
         assertTrue(0==manager.findPrimes(null));
         assertTrue(0==manager.findPrimes(-3000));
-    }
+    }*/
 
-    int primeNumbersBruteForce(int n) {
-        int cnt=0;
-        for (int i = 2; i <= n; i++) {
-            if (isPrimeBruteForce(i)) {
-                cnt++;
-            }
-        }
-        return cnt;
-    }
-    boolean isPrimeBruteForce(int number) {
-        for (int i = 2; i < number; i++) {
-            if (number % i == 0) {
-                return false;
-            }
-        }
-        return true;
-    }
     @AfterAll
     static void release()
     {

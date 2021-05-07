@@ -43,7 +43,7 @@ public class ClientThread implements Runnable {
                 /// reflection api to get the class name & method name & method invocation
                 Class<?> c = Class.forName("socket.server.manager."+requestObject.getManagerName());
                 Object object = c.newInstance();
-                Method method = c.getDeclaredMethod(requestObject.getMethod(), Integer.class);
+                Method method = c.getDeclaredMethod(requestObject.getMethod(), Integer.class,RequestObject.class);
 
                 /// getting the number from HashMap
                 String number = requestObject.getArgs().getOrDefault("n", "");
@@ -55,9 +55,9 @@ public class ClientThread implements Runnable {
                         serverOutputStream.writeObject(requestObject.toString() + " :" + "Number must be positive integer");
                     }
                     else {
-                        /// invode the findPrime method via reflection api along with that client object
-                        int res = (int) method.invoke(object, num);
-                        serverOutputStream.writeObject(requestObject.toString() + " :" + res);
+                        /// invoke the findPrime method via reflection api along with that client object
+                        String resString = (String) method.invoke(object, num,requestObject);
+                        serverOutputStream.writeObject(resString);
                     }
                 }
                 catch (NumberFormatException e) ///if not integer when parsing then it will throw this exception

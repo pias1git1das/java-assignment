@@ -17,7 +17,7 @@ public class Main {
             clientList.add(client);
         }
         /// making 1000 request for 10 clients
-        for (int i = 1; i <= 300; i++) {
+        for (int i = 1; i <= 3000; i++) {
             Random r = new Random();
             int randomClient = r.nextInt(Integer.MAX_VALUE) % clientList.size();
             Client client = clientList.get(randomClient);
@@ -32,17 +32,11 @@ public class Main {
             req.setRequestId(client.getClientId() + "-" + i);
             req.setArgs(hm);
             req.setMessage("request");
-            client.sendRequest(req);
+            RequestThread thread=new RequestThread(client,req);
+            Thread t=new Thread(thread);
+            t.start();
         }
-        RequestObject exitRequest = ob.createExitRequest();
-        for (int i = 1; i < clientList.size(); i++)
-            clientList.get(i).closeClient();
 
-        /// creating exit request to server from that last client
-        if (clientList.size() > 0) {
-            clientList.get(0).sendRequest(exitRequest);
-            clientList.get(0).closeClient();
-        }
     }
 
     RequestObject createExitRequest()
