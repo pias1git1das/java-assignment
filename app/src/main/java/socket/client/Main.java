@@ -1,7 +1,6 @@
 package socket.client;
 
 import socket.server.io.RequestObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,16 +31,15 @@ public class Main {
             req.setRequestId(client.getClientId() + "-" + i);
             req.setArgs(hm);
             req.setMessage("request");
-            RequestThread thread=new RequestThread(client,req);
-            Thread t=new Thread(thread);
+            RequestThread thread = new RequestThread(client, req);
+            Thread t = new Thread(thread);
             t.start();
         }
 
     }
 
-    RequestObject createExitRequest()
-    {
-        RequestObject requestObject=new RequestObject();
+    RequestObject createExitRequest() {
+        RequestObject requestObject = new RequestObject();
         requestObject.setMessage("EXIT");
         return requestObject;
     }

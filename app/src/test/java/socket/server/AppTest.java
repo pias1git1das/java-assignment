@@ -8,6 +8,7 @@ import socket.client.Client;
 import socket.client.RequestThread;
 import socket.server.io.RequestObject;
 import socket.server.manager.PrimeCalculationManager;
+
 import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -23,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AppTest {
     private static InetAddress host;
     private static final int PORT = 9876;
-    private static List<Client> list=new ArrayList<>();
+    private static List<Client> list = new ArrayList<>();
 
     @BeforeAll
     static void initialize() throws IOException {
@@ -39,27 +40,8 @@ class AppTest {
         host = InetAddress.getLocalHost();
     }
 
-   /* @Test
-    void sendRequest() throws Exception {
-        Client client = new Client("client1", "127.0.0.1", 9876);
-        RequestObject req = new RequestObject();
-        HashMap<String, String> hm = new HashMap<>();
-        hm.put("n", "3000");
-        req.setManagerName("PrimeCalculationManager");
-        req.setMethod("findPrimes");
-        req.setRequestId("client1-1");
-        req.setArgs(hm);
-        req.setMessage("request");
-        client.sendRequest(req);
-        list.add(client);
-    }
-
-   */
-
-    /// to test this, uncomment that portion
     @Test
     void sendMultiRequestMultiClient() throws Exception {
-        //System.out.println("*** Multi Request multi Client Test ***");
         List<Client> clientList = new ArrayList<>();
         // creating a client pool
         for (int c = 1; c <= 10; c++) {
@@ -82,15 +64,14 @@ class AppTest {
             req.setRequestId(client.getClientId() + "-" + i);
             req.setArgs(hm);
             req.setMessage("request");
-            RequestThread thread=new RequestThread(client,req);
-            Thread t=new Thread(thread);
+            RequestThread thread = new RequestThread(client, req);
+            Thread t = new Thread(thread);
             t.start();
         }
     }
 
     @Test
     void sendRequestWithNonInteger() throws Exception {
-       // System.out.println("*** Non Integer Value Test ***");
         Client client = new Client("client1", "127.0.0.1", 9876);
         RequestObject req = new RequestObject();
         HashMap<String, String> hm = new HashMap<>();
@@ -104,20 +85,9 @@ class AppTest {
         list.add(client);
     }
 
-   /* @Test
-    void isPrime()
-    {
-       // System.out.println("*** Null & negative number edge case Test ***");
-        PrimeCalculationManager manager=new PrimeCalculationManager();
-        assertTrue(0==manager.findPrimes(null));
-        assertTrue(0==manager.findPrimes(-3000));
-    }*/
-
     @AfterAll
-    static void release()
-    {
-        for(Client c:list)
+    static void release() {
+        for (Client c : list)
             c.closeClient();
-
     }
 }
