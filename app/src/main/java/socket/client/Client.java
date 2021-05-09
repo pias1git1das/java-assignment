@@ -11,16 +11,16 @@ public class Client {
     final Socket clientSocket;
     final ObjectOutputStream objectOutputStream;
     final ObjectInputStream objectInputStream;
-    private volatile int sent, received;
-    private boolean running;
+    public final int totalRequest;
+    private volatile int received;
 
-    public Client(String cId, String hostName, int PORT) throws Exception {
+    public Client(String cId, String hostName, int PORT, int requestNum) throws Exception {
         clientId = cId;
         clientSocket = new Socket(hostName, PORT);
         objectOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
         objectInputStream = new ObjectInputStream(clientSocket.getInputStream());
-        running = true;
-        sent = received = 0;
+        totalRequest = requestNum;
+        received = 0;
     }
 
     public String getClientId() {
@@ -30,7 +30,6 @@ public class Client {
     public void sendRequest(RequestObject requestObject) {
         try {
             synchronized (objectOutputStream) {
-                sent++;
                 System.out.println("Sending Request:" + requestObject.toString());
                 objectOutputStream.writeObject(requestObject);
             }
@@ -43,9 +42,9 @@ public class Client {
         try {
             while (true) {
                 String res = (String) objectInputStream.readObject();
-                received++;
                 System.out.println("Result from server:" + res);
-                if (received == sent)
+                received++;
+                if (received == totalRequest)
                     break;
             }
         } catch (Exception e) {
@@ -58,8 +57,6 @@ public class Client {
             objectOutputStream.close();
             objectInputStream.close();
             clientSocket.close();
-            running = false;
-
         } catch (Exception e) {
             System.out.println("Exception Message:" + e.getMessage());
         }

@@ -5,6 +5,7 @@ package socket.server;
 
 import org.junit.jupiter.api.*;
 import socket.client.Client;
+import socket.client.Main;
 import socket.client.RequestThread;
 import socket.server.io.RequestObject;
 import socket.server.manager.PrimeCalculationManager;
@@ -41,97 +42,19 @@ class AppTest {
     }
 
     @Test
-    void singleClientParallelRequest() throws Exception
-    {
-        List<Client> clientList = new ArrayList<>();
-        List<Thread> readThreadClientList = new ArrayList<>();
-
-        // creating a client pool
-        for (int c = 1; c <= 1; c++) {
-            Client client = new Client("client" + c, "127.0.0.1", 9876);
-            clientList.add(client);
-
-            /// this thread are only used by each socket to read response from server
-            RequestThread readThread = new RequestThread(client, null);
-            Thread t = new Thread(readThread);
-            t.start();
-            readThreadClientList.add(t);
-        }
-        /// making 1000 request for 10 clients
-        for (int i = 1; i <= 10; i++) {
-            Random r = new Random();
-            int randomClient = r.nextInt(Integer.MAX_VALUE) % clientList.size();
-            Client client = clientList.get(randomClient);
-
-            /// creating request object
-            RequestObject req = new RequestObject();
-            HashMap<String, String> hm = new HashMap<>();
-            hm.put("n", "" + r.nextInt(40000));
-
-            req.setManagerName("PrimeCalculationManager");
-            req.setMethod("findPrimes");
-            req.setRequestId(client.getClientId() + "-" + i);
-            req.setArgs(hm);
-            req.setMessage("request");
-            RequestThread thread = new RequestThread(client, req);
-            Thread t = new Thread(thread);
-            t.start();
-            t.join();
-            Thread.sleep(40);
-        }
-
-        for (Thread readThread : readThreadClientList)
-            readThread.join();
-
+    void singleClientParallelRequest() throws Exception {
+        Main ob = new Main();
+        ob.singleClientParallelRequest();
     }
 
     @Test
-    void multiClientMultiParallelRequest() throws Exception
-    {
-        List<Client> clientList = new ArrayList<>();
-        List<Thread> readThreadClientList = new ArrayList<>();
-
-        // creating a client pool
-        for (int c = 1; c <= 10; c++) {
-            Client client = new Client("client" + c, "127.0.0.1", 9876);
-            clientList.add(client);
-
-            /// this thread are only used by each socket to read response from server
-            RequestThread readThread = new RequestThread(client, null);
-            Thread t = new Thread(readThread);
-            t.start();
-            readThreadClientList.add(t);
-        }
-        /// making 100 request for 10 clients
-        for (int i = 1; i <= 100; i++) {
-            Random r = new Random();
-            int randomClient = r.nextInt(Integer.MAX_VALUE) % clientList.size();
-            Client client = clientList.get(randomClient);
-
-            /// creating request object
-            RequestObject req = new RequestObject();
-            HashMap<String, String> hm = new HashMap<>();
-            hm.put("n", "" + r.nextInt(40000));
-
-            req.setManagerName("PrimeCalculationManager");
-            req.setMethod("findPrimes");
-            req.setRequestId(client.getClientId() + "-" + i);
-            req.setArgs(hm);
-            req.setMessage("request");
-            RequestThread thread = new RequestThread(client, req);
-            Thread t = new Thread(thread);
-            t.start();
-            t.join();
-            Thread.sleep(40);
-        }
-
-        for (Thread readThread : readThreadClientList)
-            readThread.join();
-
+    void multiClientMultiParallelRequest() throws Exception {
+        Main ob = new Main();
+        ob.multiClientMultiParallelRequest();
     }
-    @Test
+    /*@Test
     void sendRequestWithNonInteger() throws Exception {
-        Client client = new Client("client1", "127.0.0.1", 9876);
+        Client client = new Client("client1", "127.0.0.1", 9876,1);
         RequestObject req = new RequestObject();
         HashMap<String, String> hm = new HashMap<>();
         hm.put("n", "NonInteger");
@@ -142,7 +65,7 @@ class AppTest {
         req.setMessage("request");
         client.sendRequest(req);
         list.add(client);
-    }
+    }*/
 
     @AfterAll
     static void release() {

@@ -37,7 +37,9 @@ public class ClientThread implements Runnable {
         RequestObject requestObject = null;
         try {
             while (true) {
-                requestObject = (RequestObject) serverInputStream.readObject();
+                synchronized (serverInputStream) {
+                    requestObject = (RequestObject) serverInputStream.readObject();
+                }
                 String message = requestObject.getMessage();
                 /// if exit messages then exit the server
                 if (message.equalsIgnoreCase(EXIT)) {

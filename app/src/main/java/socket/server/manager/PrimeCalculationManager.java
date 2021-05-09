@@ -20,7 +20,9 @@ public class PrimeCalculationManager implements Runnable {
     public void run() {
         String r = findPrimes(num, requestObject);
         try {
-            outputStream.writeObject(r);
+            synchronized (outputStream) {
+                outputStream.writeObject(r);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
