@@ -1,10 +1,12 @@
 package socket.server;
 
 import socket.server.io.RequestObject;
+import socket.server.manager.PrimeCalculationManager;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.Socket;
 
@@ -42,34 +44,16 @@ public class ClientThread implements Runnable {
                     appServer.closeServer();
                     break;
                 }
-
-                /// reflection api to get the class name & method name & method invocation
-                if (reflectionObject == null) {
-                    classInstance = Class.forName("socket.server.manager." + requestObject.getManagerName());
-                    reflectionObject = classInstance.newInstance();
-                    method = classInstance.getDeclaredMethod(requestObject.getMethod(), Integer.class, RequestObject.class);
-                }
-                /// getting the number from HashMap
                 String number = requestObject.getArgs().getOrDefault("n", "");
-
-                try {
-                    int num = Integer.parseInt(number);
-                    /// if num is negative or exceeds the MAX VALUE then throw an checked Exception
-                    if (num < -1 || num > Integer.MAX_VALUE) {
-                        serverOutputStream.writeObject(requestObject.toString() + " :" + "Number must be positive integer");
-                    } else {
-                        /// invoke the findPrime method via reflection api along with that client object
-                        String resString = (String) method.invoke(reflectionObject, num, requestObject);
-                        serverOutputStream.writeObject(resString);
-                    }
-                } catch (NumberFormatException e) ///if not integer when parsing then it will throw this exception
-                {
-                    serverOutputStream.writeObject(requestObject.toString() + " ," + "Please provide Integer number");
-                }
+                int num = Integer.parseInt(number);
+                PrimeCalculationManager ob = new PrimeCalculationManager(num, serverOutputStream, requestObject);
+                classInstance = Class.forName("socket.server.manager." + requestObject.getManagerName());
+                Constructor<?> cons = classInstance.getConstructor(Integer.class, ObjectOutputStream.class, RequestObject.class);
+                reflectionObject = cons.newInstance(num, serverOutputStream, requestObject);
+                new Thread(ob).start();
             }
         } catch (Exception e) {
-            //System.out.println("Exception:"+e.getMessage());
-        }
 
+        }
     }
 }

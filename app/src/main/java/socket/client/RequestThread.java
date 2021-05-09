@@ -13,7 +13,9 @@ public class RequestThread implements Runnable {
 
     @Override
     public void run() {
-        client.sendRequest(requestObject);
+        if (requestObject == null) {
+            client.readRequest();
+        } else
+            client.sendRequest(requestObject);
     }
-
 }
