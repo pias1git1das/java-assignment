@@ -57,7 +57,7 @@ public class Main {
                 /// creating request object
                 RequestObject req = new RequestObject();
                 HashMap<String, String> hm = new HashMap<>();
-                hm.put("n", "" + r.nextInt(40000));
+                hm.put("n", "" + r.nextInt(70000));
 
                 req.setManagerName("PrimeCalculationManager");
                 req.setMethod("findPrimes");
@@ -68,7 +68,7 @@ public class Main {
                 Thread t = new Thread(thread);
                 t.start();
                 t.join();
-                Thread.sleep(40);
+                Thread.sleep(30);
             }
         }
 

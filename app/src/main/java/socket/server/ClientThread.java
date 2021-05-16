@@ -48,11 +48,11 @@ public class ClientThread implements Runnable {
                 }
                 String number = requestObject.getArgs().getOrDefault("n", "");
                 int num = Integer.parseInt(number);
-                PrimeCalculationManager ob = new PrimeCalculationManager(num, serverOutputStream, requestObject);
+                ///PrimeCalculationManager ob = new PrimeCalculationManager(num, serverOutputStream, requestObject);
                 classInstance = Class.forName("socket.server.manager." + requestObject.getManagerName());
                 Constructor<?> cons = classInstance.getConstructor(Integer.class, ObjectOutputStream.class, RequestObject.class);
                 reflectionObject = cons.newInstance(num, serverOutputStream, requestObject);
-                new Thread(ob).start();
+                new Thread((PrimeCalculationManager)reflectionObject).start();
             }
         } catch (Exception e) {
 
